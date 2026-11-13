@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Lokale Konfiguration mit Geheimnissen (URL / Passwörter)
+config/config.toml
+.env
+
+# Generierte Dateien
+output/*
+!output/.gitkeep
+
+# Waveshare-Treiber wird per Setup-Skript geholt, nicht eingecheckt
+lib/waveshare_epd/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Kalender-Cache und lokale Kalenderdateien
+cache/
+config/calendars/*.ics

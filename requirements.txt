@@ -1,0 +1,13 @@
+# Kalender
+requests>=2.31
+icalendar>=5.0
+recurring-ical-events>=2.1
+caldav>=1.3          # optional, aktuell nicht genutzt
+
+# Zeitzonen / Konfiguration
+tzdata
+tomli; python_version < "3.11"
+
+# Pillow, spidev, gpiozero, lgpio kommen auf dem Pi über apt (siehe scripts/setup_pi.sh)
+# Für die Entwicklung am PC zusätzlich:  pip install pillow
+pytest

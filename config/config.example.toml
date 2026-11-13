@@ -1,0 +1,61 @@
+# Kopieren nach config/config.toml und anpassen. config.toml wird NICHT eingecheckt.
+
+[general]
+timezone = "Europe/Berlin"
+days_ahead = 14          # wie weit im Voraus Termine geladen werden
+
+[display]
+grayscale = true         # 4 Graustufen; false = reines Schwarz/Weiß
+model = "epd7in5_V2"     # Waveshare 7.5" V2, 800x480, schwarz/weiß
+mock = true              # true = kein echtes Display, Bild nur als PNG in output/ (für PC)
+
+[layout]
+font = "DejaVuSans"
+
+# =============================================================================
+#  KALENDER-ABOS
+# =============================================================================
+# Für jeden Kalender einen [[calendars]]-Block anlegen (beliebig viele).
+#
+#   name           Anzeigename (nur für Logs / Prüfskript)
+#   type           "ics" (Standard) oder "handballnet"
+#   url            ICS-/webcal-Link (webcal:// wird automatisch zu https://)
+#   file           ODER Pfad zu einer lokalen .ics-Datei (relativ zum Repo)
+#   team_id        nur bei type = "handballnet": Zahl aus https://www.handball.net/team/<team_id>
+#   icon           lena | fyn | beide | lena_handball | fyn_handball | handball |
+#                  tonne | termin | stern
+#   prefix_icons   optional: Titel-Präfix -> Icon, Präfix wird entfernt ("L: Yoga" -> Frau, "Yoga")
+#   title_replace  optional: Text im Titel ersetzen, z. B. { "Restabfall" = "Restmüll" }
+#   title_prefix   optional: Text vor jeden Titel setzen
+#   enabled        optional: false = vorübergehend ausblenden
+#
+# Prüfen, ob alle Kalender funktionieren:   python scripts/check_calendars.py
+
+[[calendars]]
+name = "Familie (iCloud)"
+# iPhone: Kalender-App -> Kalender -> (i) -> "Öffentlicher Kalender" -> Link teilen
+url = "webcal://p00-caldav.icloud.com/published/2/XXXXXXXXXXXXXXXX"
+icon = "beide"
+prefix_icons = { "L:" = "lena", "F:" = "fyn" }
+
+[[calendars]]
+name = "Handball-Mannschaft"
+# handball.net hat keinen ICS-Export mehr – Spiele werden direkt abgefragt.
+type = "handballnet"
+team_id = 12345
+icon = "fyn_handball"
+title_prefix = ""
+
+[[calendars]]
+name = "Müllabfuhr AWR"
+# Link-Aufbau: .../ort/<Ort-ID>/strasse/<Straßen-ID>/hausnummern/<Nr-ID>/abfallarten/<Arten>/kalender.ics
+# IDs: https://www.awr.de/api_v2/collection_dates/1/orte  ->  .../ort/<ID>/strassen  ->  .../ort/<ID>/abfallarten
+url = "https://www.awr.de/api_v2/collection_dates/1/ort/<ORT>/strasse/<STRASSE>/hausnummern/0/abfallarten/R02-B02-D04-P04/kalender.ics"
+icon = "tonne"
+title_replace = { "(14-täglich)" = "", "(4-wöchentlich)" = "", "Restabfall" = "Restmüll" }
+
+[[calendars]]
+name = "Beispiel: lokale Datei"
+file = "config/calendars/beispiel.ics"
+icon = "termin"
+enabled = false
