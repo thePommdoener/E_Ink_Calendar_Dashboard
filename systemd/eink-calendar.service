@@ -1,3 +1,4 @@
+# Vorlage – wird von scripts/install_service.sh ausgefüllt (@USER@, @DIR@).
 [Unit]
 Description=E-Ink Kalender-Dashboard aktualisieren
 Wants=network-online.target
@@ -5,7 +6,7 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-User=pi
-WorkingDirectory=/home/pi/E_Ink_Calendar_Dashboard
-Environment=PYTHONPATH=/home/pi/E_Ink_Calendar_Dashboard/src:/home/pi/E_Ink_Calendar_Dashboard/lib
-ExecStart=/home/pi/E_Ink_Calendar_Dashboard/.venv/bin/python -m eink_calendar
+User=@USER@
+WorkingDirectory=@DIR@
+Environment=PYTHONPATH=@DIR@/src:@DIR@/lib
+ExecStart=@DIR@/.venv/bin/python -m eink_calendar

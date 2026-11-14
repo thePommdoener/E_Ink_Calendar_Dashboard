@@ -47,6 +47,8 @@ Neue Icons: in `src/eink_calendar/rendering/icons.py` zeichnen und in `ICONS` ei
 
 ## Installation auf dem Pi
 
+Ausführliche Schritt-für-Schritt-Anleitung: [docs/PI_SETUP.md](docs/PI_SETUP.md)
+
 ```bash
 git clone https://github.com/thePommdoener/E_Ink_Calendar_Dashboard.git
 cd E_Ink_Calendar_Dashboard
@@ -55,5 +57,5 @@ nano config/config.toml
 sudo reboot
 ```
 
-Hinweis: In `systemd/eink-calendar.service` ist der Benutzer `pi` eingetragen.
-Falls im Raspberry Pi Imager ein anderer Benutzername gewählt wurde, dort anpassen.
+Pi: Hostname `KalenderPi`, Benutzer `fynnstapelfeldt` (`ssh fynnstapelfeldt@KalenderPi.local`).
+`scripts/install_service.sh` setzt Benutzer und Projektpfad automatisch in den systemd-Service ein.
