@@ -74,8 +74,14 @@ class WaveshareDisplay:
             for value in (x >> 8, x & 0xFF, x_end >> 8, x_end & 0xFF,
                           y >> 8, y & 0xFF, y_end >> 8, y_end & 0xFF, 0x01):
                 epd.send_data(value)
-            epd.send_command(0x13)          # neue Bilddaten (im Teil-Modus: 1 = weiß)
-            epd.send_data2(bytearray(img.tobytes()))
+            new = bytearray(img.tobytes())  # im Teil-Modus: 1 = weiß
+            # "Alt"-Speicher = Gegenteil von "neu" -> jedes Pixel im Fenster wird
+            # garantiert umgeschaltet. Nötig, weil der Tiefschlaf den Speicher löscht;
+            # sonst sieht das Display keinen Unterschied und zeichnet nichts.
+            epd.send_command(0x10)
+            epd.send_data2(bytearray(b ^ 0xFF for b in new))
+            epd.send_command(0x13)
+            epd.send_data2(new)
             epd.send_command(0x12)          # Refresh
             time.sleep(0.1)
             epd.ReadBusy()

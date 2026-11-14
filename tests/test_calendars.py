@@ -79,3 +79,10 @@ def test_handballnet_requires_team_id(tmp_path):
     p.write_text('[[calendars]]\nname="X"\ntype="handballnet"\nicon="handball"\n', encoding="utf-8")
     with pytest.raises(ConfigError, match="team_id"):
         load_config(p)
+
+
+def test_config_syntax_error_is_friendly(tmp_path):
+    p = tmp_path / "c.toml"
+    p.write_text("mock false\n", encoding="utf-8")
+    with pytest.raises(ConfigError, match="Tippfehler"):
+        load_config(p)

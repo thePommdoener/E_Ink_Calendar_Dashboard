@@ -108,8 +108,12 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
         raise ConfigError(
             f"{path} fehlt. Kopiere config/config.example.toml nach config/config.toml und passe sie an."
         )
-    with path.open("rb") as f:
-        raw = tomllib.load(f)
+    try:
+        with path.open("rb") as f:
+            raw = tomllib.load(f)
+    except tomllib.TOMLDecodeError as exc:
+        raise ConfigError(f"Tippfehler in {path}: {exc}. Tipp: Kommentare beginnen mit '#', "
+                          "Einstellungen haben die Form  name = wert") from exc
 
     general = raw.get("general", {})
     display = raw.get("display", {})
