@@ -86,6 +86,18 @@ sudo apt install -y git tmux
 sudo timedatectl set-timezone Europe/Berlin
 ```
 
+**WLAN-Energiesparen ausschalten** – sonst friert die SSH-Verbindung beim Zero 2 gern ein:
+```bash
+nmcli -t -f NAME connection show --active          # Name der WLAN-Verbindung anzeigen
+sudo nmcli connection modify "NAME" 802-11-wireless.powersave 2
+sudo nmcli connection up "NAME"                    # SSH kann kurz hängen -> neu verbinden
+```
+
+Hinweise zu Meldungen beim Upgrade (alle harmlos):
+- `WARNING: apt does not have a stable CLI interface` → ignorieren.
+- `debconf: unable to initialize frontend: Dialog` → Terminal zu klein; Fragen kommen als Text, mit **Enter** die Standardantwort nehmen.
+- `Could not get lock /var/lib/dpkg/lock-frontend` → ein anderes apt läuft noch; warten, **nie** die Lock-Datei löschen.
+
 Tipp: Lange Befehle in `tmux` starten (`tmux`, danach normal arbeiten). Bricht die
 Verbindung ab: neu verbinden und `tmux attach`.
 
@@ -104,8 +116,15 @@ sudo reboot
 Ist das GitHub-Repo **privat**, fragt `git clone` nach Zugangsdaten. Dann entweder
 einen Deploy-Key einrichten oder den Ordner direkt vom PC kopieren (am PC):
 ```powershell
-scp -r D:\Documents\Repos\E_Ink_Calendar_Dashboard fynnstapelfeldt@KalenderPi.local:~/   # .venv danach auf dem Pi löschen!
+scp -r D:\Documents\Repos\E_Ink_Calendar_Dashboard fynnstapelfeldt@KalenderPi.local:~/
 ```
+Danach auf dem Pi die Windows-Python-Umgebung entfernen (sonst scheitert das Setup):
+```bash
+cd ~/E_Ink_Calendar_Dashboard
+rm -rf .venv
+find . -name "__pycache__" -type d -prune -exec rm -rf {} +
+```
+(Bei dieser Variante ist `config/config.toml` schon dabei – Schritt 6 entfällt.)
 
 `setup_pi.sh` erledigt automatisch:
 - Systempakete: Python, Pillow, numpy, spidev, gpiozero, lgpio, Schriften
@@ -181,20 +200,26 @@ print("OK")
 EOF
 ```
 
-Wenn Test B den Kalender zeigt: **Bescheid geben** – dann wird
-`display/waveshare_display.py` fertig gebaut, und es geht weiter mit Schritt 9.
+Wenn Test B den Kalender zeigt, funktioniert die Hardware – weiter mit Schritt 9.
 
 Fotografier das Display gern ab, dann können wir Graustufen und Schriftgrößen
 am echten Bild nachjustieren.
 
 ---
 
-## 9. Automatischer Betrieb (sobald die Display-Ausgabe fertig ist)
+## 9. Automatischer Betrieb
 
 ```bash
-nano config/config.toml          # [display] mock = false
-.venv/bin/python -m eink_calendar   # einmal manuell testen
-bash scripts/install_service.sh  # Aktualisierung alle 15 Minuten (Benutzer/Pfad werden automatisch eingesetzt)
+cd ~/E_Ink_Calendar_Dashboard
+bash scripts/update.sh                          # neuesten Code holen
+nano config/config.toml                         # [display] mock = false
+PYTHONPATH=src .venv/bin/python -m eink_calendar   # einmal manuell -> Display zeichnet
+bash scripts/install_service.sh                 # ab jetzt alle 15 Minuten automatisch
+```
+
+Display leeren (z. B. vor längerer Lagerung):
+```bash
+PYTHONPATH=src .venv/bin/python -m eink_calendar --clear
 ```
 
 Nützliche Befehle:

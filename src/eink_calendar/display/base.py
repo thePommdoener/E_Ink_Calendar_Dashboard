@@ -1,4 +1,10 @@
-"""Gemeinsame Schnittstelle für alle Displays (show(image), clear(), sleep()).
+"""Gemeinsame Schnittstelle für alle Displays."""
+from __future__ import annotations
 
-TODO: implementieren.
-"""
+from typing import Protocol
+
+from PIL import Image
+
+
+class Display(Protocol):
+    def show(self, image: Image.Image) -> object: ...
