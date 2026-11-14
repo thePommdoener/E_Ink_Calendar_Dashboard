@@ -58,10 +58,12 @@ Es gibt nur eine Ansicht: **`ansicht_agenda.txt`**
 | Element                          | Graustufen-Modus            | S/W-Modus            |
 |----------------------------------|-----------------------------|----------------------|
 | Tagesüberschrift heute           | schwarzer Balken, weiße Schrift | dicke Linie      |
-| Tagesüberschrift andere Tage     | hellgrauer Balken           | dünne Linie          |
+| Tagesüberschrift andere Tage     | fette Schrift + dunkelgraue Linie | dünne Linie    |
 | Leere Tage, "ganztägig", KW, Stand | dunkelgrau                | schwarz              |
 | Termine von heute, die vorbei sind | dunkelgrau (Icon + Text)  | schwarz              |
 | Monatskalender: vergangene Tage  | dunkelgrau                  | schwarz              |
-| Monatskalender: aktuelle Woche   | hellgrau hinterlegt         | –                    |
 
 Text immer ohne Kantenglättung (scharf auf E-Paper).
+
+Hinweis vom echten Panel: Hellgrau (0xC0) wirkt dort fast so dunkel wie Schwarz –
+für Flächen daher nicht verwenden.

@@ -121,9 +121,6 @@ def _draw_left(draw: ImageDraw.ImageDraw, p: Palette, today: date, now: datetime
         _centered(draw, x0 + i * cell_w + cell_w // 2, y0, wd, f_head, p.ink)
     for r, week in enumerate(calendar.Calendar().monthdayscalendar(today.year, today.month)):
         y = y0 + (r + 1) * cell_h
-        if p.gray and today.day in week:
-            # aktuelle Woche hellgrau hinterlegen
-            draw.rounded_rectangle((x0 - 2, y - 3, x0 + 7 * cell_w + 1, y + cell_h - 4), radius=4, fill=p.band)
         for c, d in enumerate(week):
             if not d:
                 continue
@@ -154,12 +151,17 @@ def _day_height(n_entries: int) -> int:
 
 def _draw_day_header(draw, p: Palette, y: int, title: str, is_today: bool, empty: bool) -> None:
     f_title = font(BOLD, 18)
-    if p.gray:
-        # Graustufen: Balken statt Linie – heute schwarz, sonst hellgrau
-        bg, fg = (p.ink, WHITE) if is_today else (p.band, p.ink)
-        draw.rectangle((RIGHT_X - 6, y - 1, RIGHT_END, y + 24), fill=bg)
-        draw.text((RIGHT_X, y + 1), title, font=f_title, fill=fg)
-        empty_fill = WHITE if is_today else p.muted
+    if p.gray and is_today:
+        # Heute: schwarzer Balken mit weißer Schrift – das einzige "laute" Element.
+        # (Hellgraue Balken wirken auf dem echten Panel fast so dunkel wie schwarz,
+        #  deshalb bekommen die anderen Tage nur eine Linie.)
+        draw.rectangle((RIGHT_X - 6, y - 1, RIGHT_END, y + 24), fill=p.ink)
+        draw.text((RIGHT_X, y + 1), title, font=f_title, fill=WHITE)
+        empty_fill = WHITE
+    elif p.gray:
+        draw.text((RIGHT_X, y), title, font=f_title, fill=p.ink)
+        draw.line((RIGHT_X, y + 24, RIGHT_END, y + 24), fill=p.muted, width=2)
+        empty_fill = p.muted
     else:
         draw.text((RIGHT_X, y), title, font=f_title, fill=p.ink)
         draw.line((RIGHT_X, y + 24, RIGHT_END, y + 24), fill=p.ink, width=3 if is_today else 1)
