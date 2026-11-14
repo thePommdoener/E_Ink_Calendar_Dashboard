@@ -47,6 +47,8 @@ class Config:
     display_model: str
     mock: bool
     grayscale: bool
+    clock: bool
+    full_refresh_minutes: int
     calendars: list[CalendarConfig]
 
 
@@ -121,5 +123,7 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
         display_model=display.get("model", "epd7in5_V2"),
         mock=bool(display.get("mock", False)),
         grayscale=bool(display.get("grayscale", True)),
+        clock=bool(display.get("clock", True)),
+        full_refresh_minutes=max(1, int(display.get("full_refresh_minutes", 15))),
         calendars=calendars,
     )

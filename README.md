@@ -16,7 +16,7 @@ src/eink_calendar/
 lib/waveshare_epd/ Waveshare-Treiber (wird von scripts/setup_pi.sh geholt)
 assets/fonts/      Schriftarten (.ttf)
 scripts/           Setup, Service-Installation, Update
-systemd/           Service + Timer (Aktualisierung alle 15 min)
+systemd/           Dienst: Uhr jede Minute, Kalender alle 15 min
 tests/             Tests
 output/            Generierte Vorschaubilder (nicht im Git)
 ```

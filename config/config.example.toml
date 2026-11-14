@@ -6,6 +6,8 @@ days_ahead = 14          # wie weit im Voraus Termine geladen werden
 
 [display]
 grayscale = true         # 4 Graustufen; false = reines Schwarz/Weiß
+clock = true             # große Uhr oben links, jede Minute per Teil-Refresh
+full_refresh_minutes = 15  # komplettes Bild + Kalender neu laden alle X Minuten
 model = "epd7in5_V2"     # Waveshare 7.5" V2, 800x480, schwarz/weiß
 mock = true              # true = kein echtes Display, Bild nur als PNG in output/ (für PC)
 

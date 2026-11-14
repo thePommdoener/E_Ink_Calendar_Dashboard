@@ -1,12 +1,19 @@
 # Vorlage – wird von scripts/install_service.sh ausgefüllt (@USER@, @DIR@).
+# Dauerbetrieb: Uhr jede Minute (Teil-Refresh), komplettes Bild alle 15 Minuten.
 [Unit]
-Description=E-Ink Kalender-Dashboard aktualisieren
+Description=E-Ink Kalender-Dashboard
 Wants=network-online.target
 After=network-online.target
 
 [Service]
-Type=oneshot
+Type=simple
 User=@USER@
 WorkingDirectory=@DIR@
 Environment=PYTHONPATH=@DIR@/src:@DIR@/lib
-ExecStart=@DIR@/.venv/bin/python -m eink_calendar
+Environment=PYTHONUNBUFFERED=1
+ExecStart=@DIR@/.venv/bin/python -m eink_calendar --loop
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

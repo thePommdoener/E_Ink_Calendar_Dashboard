@@ -10,6 +10,7 @@ from __future__ import annotations
 import importlib
 import logging
 import sys
+import time
 from pathlib import Path
 
 from PIL import Image
@@ -49,6 +50,37 @@ class WaveshareDisplay:
         finally:
             epd.sleep()
         log.info("Display aktualisiert.")
+
+    def show_partial(self, region: Image.Image, x: int, y: int) -> None:
+        """Teil-Refresh eines Rechtecks (nur Schwarz/Weiß, kein Flackern).
+
+        Nachbau von epd7in5_V2.display_Partial, aber nur für den Ausschnitt.
+        x und die Breite müssen Vielfache von 8 sein.
+        """
+        epd = self.epd
+        img = region.convert("1")
+        w, h = img.size
+        if x % 8 or w % 8:
+            raise ValueError("Teil-Refresh: x und Breite müssen Vielfache von 8 sein")
+        x_end, y_end = x + w - 1, y + h - 1
+
+        try:
+            epd.init_part()
+            epd.send_command(0x50)          # VCOM/Daten-Intervall für Teil-Refresh
+            epd.send_data(0xA9)
+            epd.send_data(0x07)
+            epd.send_command(0x91)          # Teil-Modus an
+            epd.send_command(0x90)          # Fenster setzen
+            for value in (x >> 8, x & 0xFF, x_end >> 8, x_end & 0xFF,
+                          y >> 8, y & 0xFF, y_end >> 8, y_end & 0xFF, 0x01):
+                epd.send_data(value)
+            epd.send_command(0x13)          # neue Bilddaten (im Teil-Modus: 1 = weiß)
+            epd.send_data2(bytearray(img.tobytes()))
+            epd.send_command(0x12)          # Refresh
+            time.sleep(0.1)
+            epd.ReadBusy()
+        finally:
+            epd.sleep()
 
     def clear(self) -> None:
         try:

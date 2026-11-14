@@ -209,12 +209,20 @@ am echten Bild nachjustieren.
 
 ## 9. Automatischer Betrieb
 
+Der Dienst läuft dauerhaft:
+- **jede volle Minute** wird nur die Uhr oben links per Teil-Refresh erneuert (schnell, kein Flackern),
+- **alle 15 Minuten** (`full_refresh_minutes`) werden die Kalender neu geladen und das
+  komplette Bild in Graustufen gezeichnet – das entfernt auch Schatten der Teil-Refreshes.
+
+Einstellungen in `config/config.toml` unter `[display]`: `clock = true/false`,
+`full_refresh_minutes = 15`.
+
 ```bash
 cd ~/E_Ink_Calendar_Dashboard
 bash scripts/update.sh                          # neuesten Code holen
 nano config/config.toml                         # [display] mock = false
 PYTHONPATH=src .venv/bin/python -m eink_calendar   # einmal manuell -> Display zeichnet
-bash scripts/install_service.sh                 # ab jetzt alle 15 Minuten automatisch
+bash scripts/install_service.sh                 # Dauerbetrieb starten (auch nach Neustart)
 ```
 
 Display leeren (z. B. vor längerer Lagerung):
@@ -224,8 +232,10 @@ PYTHONPATH=src .venv/bin/python -m eink_calendar --clear
 
 Nützliche Befehle:
 ```bash
-systemctl list-timers eink-calendar.timer      # wann läuft es das nächste Mal?
-journalctl -u eink-calendar.service -n 50      # Log der letzten Läufe
+systemctl status eink-calendar.service        # läuft der Dienst?
+journalctl -u eink-calendar.service -f         # Live-Log (Strg + C beendet nur die Anzeige)
+sudo systemctl restart eink-calendar.service   # nach Config-Änderungen neu starten
+sudo systemctl stop eink-calendar.service      # anhalten (z. B. vor --clear)
 bash scripts/update.sh                         # neuen Code von GitHub holen
 ```
 
@@ -245,6 +255,7 @@ bash scripts/update.sh                         # neuen Code von GitHub holen
 
 ## Pflegehinweise fürs E-Paper (laut Waveshare)
 
-- Nicht öfter als alle **3 Minuten** neu zeichnen (15 Minuten sind ideal).
+- Komplett-Refresh nicht öfter als alle **3 Minuten** (15 Minuten sind ideal). Die minütliche
+  Uhr nutzt den Teil-Refresh; dafür ist der regelmäßige Komplett-Refresh wichtig.
 - Nach dem Zeichnen immer `sleep()` – macht das Programm automatisch.
 - Wird das Display länger nicht benutzt (Lagerung): vorher mit Test A **leeren**.

@@ -32,7 +32,8 @@ MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
           "August", "September", "Oktober", "November", "Dezember"]
 
 # --- Geometrie --------------------------------------------------------------
-LEFT_W = 248                 # Breite linke Spalte
+LEFT_W = 248                 # Breite linke Spalte (Vielfaches von 8 -> Teil-Refresh)
+CLOCK_BOX = (0, 0, LEFT_W, 80)   # Uhrbereich (x0, y0, x1, y1), nur Schwarz/Weiß
 DIVIDER_X = LEFT_W
 RIGHT_X = LEFT_W + 16        # Start rechte Spalte
 RIGHT_END = WIDTH - 12
@@ -82,20 +83,39 @@ def _ellipsize(draw, text: str, fnt, max_w: int) -> str:
 
 
 # --- Linke Spalte -----------------------------------------------------------
-def _draw_left(draw: ImageDraw.ImageDraw, p: Palette, today: date, now: datetime) -> None:
+def _draw_clock(draw: ImageDraw.ImageDraw, now: datetime, ox: int = 0, oy: int = 0) -> None:
+    """Große Uhr oben links. Nur Schwarz auf Weiß – wird minütlich per Teil-Refresh erneuert."""
+    x0, y0, x1, y1 = CLOCK_BOX
+    draw.rectangle((x0 - ox, y0 - oy, x1 - 1 - ox, y1 - 1 - oy), fill=WHITE)
+    _centered(draw, (x0 + x1) // 2 - ox, y0 + 6 - oy, f"{now:%H:%M}", font(BOLD, 62), BLACK)
+
+
+def _draw_left(draw: ImageDraw.ImageDraw, p: Palette, today: date, now: datetime,
+               updated: datetime, clock: bool) -> None:
     cx = LEFT_W // 2
 
-    _centered(draw, cx, TOP + 14, WEEKDAYS[today.weekday()].upper(), font(BOLD, 26), p.ink)
-    _centered(draw, cx, TOP + 44, str(today.day), font(BOLD, 112), p.ink)
-    _centered(draw, cx, TOP + 176, f"{MONTHS[today.month - 1].upper()} {today.year}", font(BOLD, 20), p.ink)
-    _centered(draw, cx, TOP + 202, f"KW {today.isocalendar().week}", font(REGULAR, 17), p.muted)
+    if clock:
+        _draw_clock(draw, now)
+        draw.line((20, CLOCK_BOX[3] + 2, LEFT_W - 20, CLOCK_BOX[3] + 2), fill=p.muted, width=1)
+        top = CLOCK_BOX[3] + 8
+        day_font, day_h = font(BOLD, 84), 88
+    else:
+        top = TOP + 14
+        day_font, day_h = font(BOLD, 112), 132
 
-    draw.line((20, 244, LEFT_W - 20, 244), fill=p.muted, width=1)
+    _centered(draw, cx, top, WEEKDAYS[today.weekday()].upper(), font(BOLD, 24), p.ink)
+    _centered(draw, cx, top + 26, str(today.day), day_font, p.ink)
+    y = top + 26 + day_h
+    _centered(draw, cx, y, f"{MONTHS[today.month - 1].upper()} {today.year}", font(BOLD, 19), p.ink)
+    _centered(draw, cx, y + 24, f"KW {today.isocalendar().week}", font(REGULAR, 16), p.muted)
+
+    sep_y = y + 48
+    draw.line((20, sep_y, LEFT_W - 20, sep_y), fill=p.muted, width=1)
 
     # Monatskalender
-    cell_w, cell_h = 30, 24
+    cell_w, cell_h = 30, 23
     x0 = cx - (7 * cell_w) // 2
-    y0 = 254
+    y0 = sep_y + 8
     f_head, f_num = font(CONDENSED_BOLD, 15), font(CONDENSED, 16)
     for i, wd in enumerate(WD_SHORT):
         _centered(draw, x0 + i * cell_w + cell_w // 2, y0, wd, f_head, p.ink)
@@ -115,7 +135,7 @@ def _draw_left(draw: ImageDraw.ImageDraw, p: Palette, today: date, now: datetime
                 past = d < today.day
                 _centered(draw, mx, y, str(d), f_num, p.muted if past else p.ink)
 
-    _centered(draw, cx, BOTTOM - 18, f"Stand: {now:%d.%m. %H:%M}", font(REGULAR, 13), p.muted)
+    _centered(draw, cx, BOTTOM - 16, f"Kalender-Stand: {updated:%d.%m. %H:%M}", font(REGULAR, 12), p.muted)
 
 
 # --- Rechte Spalte ----------------------------------------------------------
@@ -215,10 +235,13 @@ def _draw_right(draw: ImageDraw.ImageDraw, p: Palette, events: list[Event], now:
         y += DAY_GAP
 
 
-# --- Öffentliche Funktion ---------------------------------------------------
-def render_agenda(events: list[Event], now: datetime, grayscale: bool = True) -> Image.Image:
+# --- Öffentliche Funktionen ------------------------------------------------
+def render_agenda(events: list[Event], now: datetime, grayscale: bool = True,
+                  clock: bool = False, updated: datetime | None = None) -> Image.Image:
     """Erzeugt das komplette 800x480-Bild.
 
+    clock   – große Uhr oben links (für den Minutentakt per Teil-Refresh)
+    updated – Zeitpunkt der letzten Kalenderabfrage (Standard: now)
     Rückgabe: Modus "L" mit genau 4 Grauwerten (grayscale) bzw. Modus "1" (S/W).
     """
     p = Palette.for_mode(grayscale)
@@ -226,10 +249,20 @@ def render_agenda(events: list[Event], now: datetime, grayscale: bool = True) ->
     draw = ImageDraw.Draw(img)
     draw.fontmode = "1"  # keine Kantenglättung -> nur die 4 erlaubten Grauwerte
 
-    _draw_left(draw, p, now.date(), now)
+    _draw_left(draw, p, now.date(), now, updated or now, clock)
     draw.line((DIVIDER_X, TOP, DIVIDER_X, BOTTOM), fill=p.muted if p.gray else p.ink, width=2)
     _draw_right(draw, p, events, now)
 
     if not grayscale:
         return img.point(lambda v: 255 if v >= 128 else 0).convert("1", dither=Image.Dither.NONE)
     return img
+
+
+def render_clock(now: datetime) -> tuple[Image.Image, tuple[int, int]]:
+    """Nur der Uhrbereich als S/W-Bild + linke obere Ecke – für den Teil-Refresh."""
+    x0, y0, x1, y1 = CLOCK_BOX
+    img = Image.new("L", (x1 - x0, y1 - y0), WHITE)
+    draw = ImageDraw.Draw(img)
+    draw.fontmode = "1"
+    _draw_clock(draw, now, ox=x0, oy=y0)
+    return img.convert("1", dither=Image.Dither.NONE), (x0, y0)
